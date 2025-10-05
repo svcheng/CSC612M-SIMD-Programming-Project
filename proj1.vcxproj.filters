@@ -20,7 +20,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="asmHello.asm">
+    <CustomBuild Include="kernel2.asm">
       <Filter>Source Files</Filter>
     </CustomBuild>
   </ItemGroup>
