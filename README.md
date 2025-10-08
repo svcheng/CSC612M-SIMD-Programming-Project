@@ -4,8 +4,11 @@
 
 Vectors B,C, and D were initialized as follows:
 $B[i]=\sin(i*0.001)$
+
 $C[i]=\cos(i*0.002)$
+
 $D[i]=\tan(i*0.0005 + 1.0)$
+
 
 ## Boundary Checks
 
