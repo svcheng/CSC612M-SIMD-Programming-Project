@@ -3,6 +3,7 @@
 ### Initialization
 
 Vectors B,C, and D were initialized as follows:
+
 $B[i]=\sin(i*0.001)$
 
 $C[i]=\cos(i*0.002)$
