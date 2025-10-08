@@ -31,17 +31,23 @@ Vectors $B$, $C$, and $D$ were initialized as follows:
 
 <img width="865" height="323" alt="image" src="https://github.com/user-attachments/assets/f873f506-61d9-4afb-86da-e8611c8bf9ee" />
 
-### Input Size: 2^2
+### Input Size: 2^28
 
 <img width="867" height="331" alt="image" src="https://github.com/user-attachments/assets/3bfc3aa7-4eba-43d6-84a9-5e6d39edd509" />
 
 ## Release Mode Results
 
-### Input Size: 2^20 + 3
+### Input Size: 2^20
 
-### Input Size: 2^26 + 7
+<img width="854" height="319" alt="image" src="https://github.com/user-attachments/assets/e055c46c-1a0d-4501-a0f8-d85e61e2a681" />
+
+### Input Size: 2^26
+
+<img width="856" height="317" alt="image" src="https://github.com/user-attachments/assets/99ef71aa-405e-4559-a45f-0fc7b10a6e2e" />
 
 ### Input Size: 2^28
+
+<img width="858" height="316" alt="image" src="https://github.com/user-attachments/assets/afe56aa5-015a-4110-92da-4f417651f1ec" />
 
 ## Summary Table of Execution Times
 
