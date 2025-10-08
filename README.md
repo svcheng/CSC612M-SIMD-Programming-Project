@@ -2,14 +2,10 @@
 
 ### Initialization
 
-Vectors B,C, and D were initialized as follows:
-
-$B[i]=\sin(i*0.001)$
-
-$C[i]=\cos(i*0.002)$
-
-$D[i]=\tan(i*0.0005 + 1.0)$
-
+Vectors $B$, $C$, and $D$ were initialized as follows:
+- $B[i]=\sin(i*0.001)$
+- $C[i]=\cos(i*0.002)$
+- $D[i]=\tan(i*0.0005 + 1.0)$
 
 ## Boundary Checks
 
@@ -35,7 +31,7 @@ $D[i]=\tan(i*0.0005 + 1.0)$
 
 <img width="865" height="323" alt="image" src="https://github.com/user-attachments/assets/f873f506-61d9-4afb-86da-e8611c8bf9ee" />
 
-### Input Size: 2^29
+### Input Size: 2^2
 
 <img width="867" height="331" alt="image" src="https://github.com/user-attachments/assets/3bfc3aa7-4eba-43d6-84a9-5e6d39edd509" />
 
@@ -45,7 +41,7 @@ $D[i]=\tan(i*0.0005 + 1.0)$
 
 ### Input Size: 2^26 + 7
 
-### Input Size: 2^29
+### Input Size: 2^28
 
 ## Summary Table of Execution Times
 
