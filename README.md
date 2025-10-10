@@ -10,7 +10,7 @@ Kernels:
 3. **SIMD XMM** (`vecaddmulxmm`) – 128-bit vectors (4 floats per step) with masked tail.
 4. **SIMD YMM** (`vecaddmulymm`) – 256-bit vectors (8 floats per step) with masked tail.
 
-A correctness pass prints sample outputs, and all kernels are benchmarked using the methods $QueryPerformanceQuery$ and $QueryPerformanceCounter$ from the $windows.h$ c library.
+A correctness pass prints sample outputs, and all kernels are benchmarked using the Windows high-resolution timers `QueryPerformanceFrequency` and `QueryPerformanceCounter` (from `windows.h`).
 
 ---
 
@@ -27,12 +27,11 @@ A correctness pass prints sample outputs, and all kernels are benchmarked using 
 ---
 
 ## What the Program Does
-- Allocates A, B, C, D with n = 2^n floats (configurable in main.c through the constant variable `ARRAY_SIZE`).
+- Allocates `A, B, C, D` with `n = ARRAY_SIZE` elements (e.g., `n = 2^k`; configurable via `ARRAY_SIZE` in `main.c`).
 - Initializes B, C, and D with sine, cosine, and tangent patterns, as shown below:
   - $B[i]=\sin(i*0.001)$
   - $C[i]=\cos(i*0.002)$
   - $D[i]=\tan(i*0.0005 + 1.0)$
-
 - Correctness checks:
   - Computes and prints sample values from each kernel (full vector if $n \le 10$, otherwise first/last 5 values).
 - Benchmarking:
@@ -101,7 +100,7 @@ To handle remainders safely, the code includes a **boundary check** and uses **m
 
    Example for XMM (4 floats):
 
-   ```
+   ```asm
    dd 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000  ; process only 1 lane
    dd 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000  ; process 2 lanes
    dd 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000  ; process 3 lanes
@@ -111,7 +110,12 @@ To handle remainders safely, the code includes a **boundary check** and uses **m
 
    ```asm
    lea rax, [mask_table]
+
+   ; scale remainder count by mask entry size
+   ; 16 bytes per XMM mask (4 lanes × 4 bytes)
+   ; 32 bytes per YMM mask (8 lanes × 4 bytes)
    imul r13, 16 or 32   ; (16 bytes for XMM, 32 for YMM)
+   
    vmovdqu xmm0/ymm0, [rax+r13]
    ```
 
@@ -240,7 +244,25 @@ Possible reasons for the gain being small:
 * **Randomness** in execution times resulting from nondeterministic process scheduling
 * **Hardware/OS-specific quirks**: tests were run on a Windows machine with an Intel i5-9300H CPU.
 
-Despite these constraints, YMM delivers the fastest performance overall, maintaining correctness and stable runtime across tests.
+Despite these constraints, YMM delivers the fastest performance overall when it comes to large inputs.
+
+### Why is the XMM Kernel Faster than the YMM Kernel at Smaller Input Sizes?
+
+The **XMM kernel** achieved the fastest runtime at the smallest input size tested ($2^{20}$), even outperforming the theoretically more powerful **YMM kernel**.
+This counterintuitive result can be attributed to the **trade-off between instruction overhead and data parallelism**.
+
+When processing relatively small datasets, the **setup overhead** associated with using 256-bit **YMM registers**—such as loading wider masks, managing larger data blocks, and handling alignment—can outweigh their throughput advantage. Each iteration involves more complex instruction dispatch, larger data movement, and additional latency in the CPU pipeline. As a result, these fixed costs form a larger fraction of the total execution time when the workload is small.
+
+In contrast, the **128-bit XMM kernel** offers a **better balance between computational throughput and control overhead** for such input sizes. XMM instructions operate on smaller chunks (4 floats per vector instead of 8), resulting in:
+
+* Lower latency for instruction issue and retirement
+* Simpler loop management
+* Reduced pressure on memory bandwidth and cache lines
+* Fewer alignment and masking adjustments for partial vectors
+
+Because of these factors, XMM kernels often deliver higher **per-cycle efficiency** on small to moderate workloads.
+
+As the input size increases, however, the **fixed overheads** become negligible compared to total computation time. Once the data volume is large enough to fully utilize the memory subsystem and instruction pipelines, the **YMM kernel’s wider data path (8 floats per iteration)** begins to show its advantage—achieving superior throughput and becoming the fastest kernel for large-scale inputs.
 
 ### Debug Mode vs. Release Mode Behavior
 
