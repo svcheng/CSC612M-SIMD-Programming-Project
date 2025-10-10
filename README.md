@@ -52,9 +52,9 @@ Performance in **Debug mode** was measured across progressively larger vector si
 
 | Input Size | Screenshot                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
-| 2²⁰        | <img src="https://github.com/user-attachments/assets/f84b2bff-f2b1-4e65-9bfd-24e493fa3161" width="850" /> |
-| 2²⁶        | <img src="https://github.com/user-attachments/assets/f873f506-61d9-4afb-86da-e8611c8bf9ee" width="850" /> |
-| 2²⁸        | <img src="https://github.com/user-attachments/assets/3bfc3aa7-4eba-43d6-84a9-5e6d39edd509" width="850" /> |
+| 2²⁰        | <img width="824" height="529" alt="image" src="https://github.com/user-attachments/assets/b8d12ed6-72ec-45bd-97b7-4197329bf949" /> |
+| 2²⁶        | <img width="811" height="507" alt="image" src="https://github.com/user-attachments/assets/32f795a4-d8d8-4988-9e35-381c062bd7e2" /> |
+| 2²⁸        | <img width="812" height="524" alt="image" src="https://github.com/user-attachments/assets/75ed560d-ae0b-451f-8707-900cf1aa72fe" /> |
 
 ---
 
@@ -65,9 +65,9 @@ Results show substantial performance gains over Debug mode, validating proper co
 
 | Input Size | Screenshot                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
-| 2²⁰        | <img src="https://github.com/user-attachments/assets/e055c46c-1a0d-4501-a0f8-d85e61e2a681" width="850" /> |
-| 2²⁶        | <img src="https://github.com/user-attachments/assets/99ef71aa-405e-4559-a45f-0fc7b10a6e2e" width="850" /> |
-| 2²⁸        | <img src="https://github.com/user-attachments/assets/afe56aa5-015a-4110-92da-4f417651f1ec" width="850" /> |
+| 2²⁰        | <img width="814" height="523" alt="image" src="https://github.com/user-attachments/assets/9255c48d-cb8a-4143-833e-63a3ee8c7734" /> |
+| 2²⁶        | <img width="813" height="524" alt="image" src="https://github.com/user-attachments/assets/77747e4c-5633-402b-8806-009ee9ae038e" /> |
+| 2²⁸        | <img width="823" height="529" alt="image" src="https://github.com/user-attachments/assets/d8290c54-d1d7-4157-8ae3-87089cac31e2" /> |
 
 ---
 
