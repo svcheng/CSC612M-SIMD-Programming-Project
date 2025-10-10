@@ -76,16 +76,16 @@ void vecaddmulc(size_t n, float* A, float* B, float* C, float* D) {
 /// <param name="v">the vector to be printed</param>
 void printVec(size_t n, float* v) {
 	if (n <= 10) {
-		for (int i = 0; i < n; i++) {
+		for (size_t i = 0; i < n; i++) {
 			printf("%f ", v[i]);
 		}
 	}
 	else {
-		for (int i = 0; i < 5; i++) {
+		for (size_t i = 0; i < 5; i++) {
 			printf("%.4f ", v[i]);
 		}
 		printf(" ... ");
-		for (int i = n-5; i < n; i++) {
+		for (size_t i = n-5; i < n; i++) {
 			printf("%.4f ", v[i]);
 		}
 	}
@@ -100,7 +100,7 @@ void printVec(size_t n, float* v) {
 /// <param name="n">size of the vector v</param>
 /// <param name="v">the vector to be initialized with 0</param>
 void zeroOut(size_t n, float* v) {
-	for (int i = 0; i < n; i++) {
+	for (size_t i = 0; i < n; i++) {
 		v[i] = 0.0f;
 	}
 }
@@ -117,7 +117,7 @@ void zeroOut(size_t n, float* v) {
 /// <param name="C">Second input vector used by kernel computations</param>
 /// <param name="D">Third input vector used by kernel computations</param>
 void correctnessChecks(size_t n, float* A, float* B, float* C, float* D) {
-	printf("===================================== CORRECTNESS CHECKS =====================================\n");
+	printf("=================================== CORRECTNESS CHECKS ==================================\n");
 	zeroOut(n, A);
 	vecaddmulc(n, A, B, C, D);
 	printf("C kernel: ");
@@ -143,15 +143,17 @@ void correctnessChecks(size_t n, float* A, float* B, float* C, float* D) {
 
 
 int main() {
+	printf("======================================= RUN INFO ========================================\n");
+
 	const size_t ARRAY_SIZE = 1 << 20;
 	const size_t ARRAY_BYTES = ARRAY_SIZE * sizeof(float);
-	int i;
-	printf("Number of Elements = %zd\n", ARRAY_SIZE);
+	size_t i;
+	printf("Number of Elements = %zu\n", ARRAY_SIZE);
 
 	// Declare test variables
 	const size_t TEST_NUM = 30;
-	int j;
-	printf("Number of Tests per Kernel = %zd\n", TEST_NUM);
+	size_t j;
+	printf("Number of Tests per Kernel = %zu\n\n", TEST_NUM);
 
 	// Declare the timer variable
 	LARGE_INTEGER li;
@@ -167,6 +169,7 @@ int main() {
 	C = (float*)malloc(ARRAY_BYTES);
 	D = (float*)malloc(ARRAY_BYTES);
 	Z = (float*)malloc(ARRAY_BYTES);
+	if (!A || !B || !C || !D || !Z) { fprintf(stderr, "alloc failed\n"); return 1; }
 
 	// Initialize Array
 	for (i = 0; i < ARRAY_SIZE; i++) {
@@ -179,6 +182,8 @@ int main() {
 	correctnessChecks(ARRAY_SIZE, A, B, C, D);
 
 
+	printf("=================================== PERFORMANCE SUMMARY =================================\n");
+
 	// ============================ FIRST KERNEL: PROGRAM IN C ============================
 	k1_elapse = 0;
 	for (j = 0; j < TEST_NUM; j++) {
@@ -190,13 +195,17 @@ int main() {
 		k1_elapse += ((double)(end - start)) * 1000.0 / PCFreq;
 		zeroOut(ARRAY_SIZE, A);
 	}
-	printf("Average Time in C = %f ms\n \n", k1_elapse / TEST_NUM);
+	printf("[ C Reference Kernel ]\n");
+	printf("  Average Time:       %f ms\n", k1_elapse / TEST_NUM);
+	printf("  Output Status:      CORRECT");
+	printf("\n\n");
 
 	// Save output for checking other kernels
 	vecaddmulc(ARRAY_SIZE, Z, B, C, D);
 
 
 	// ============================ SECOND KERNEL: PROGRAM IN x86-64 REGISTER ============================
+	int fail = 0;
 	k2_elapse = 0;
 	for (j = 0; j < TEST_NUM; j++) {
 		QueryPerformanceCounter(&li);
@@ -207,20 +216,25 @@ int main() {
 		k2_elapse += ((double)(end - start)) * 1000.0 / PCFreq;
 
 		// Check if the output is correct by comparing it to the output of the first kernel
-		int fail = 0;
 		for (i = 0; i < ARRAY_SIZE; i++) {
 			if (Z[i] != A[i])
 				fail += 1;
 		}
-		if (fail > 0)
-			printf("Failed %d times\n \n", fail);
 
 		zeroOut(ARRAY_SIZE, A);
 	}
-	printf("Average Time in x86_64 = %f ms\n \n", k2_elapse / TEST_NUM);
+	printf("[ x86-64 Scalar Kernel ]\n");
+	printf("  Average Time:       %f ms\n", k2_elapse / TEST_NUM);
+
+	if (fail > 0)
+		printf("  Output Status:      FAILED");
+	else
+		printf("  Output Status:      CORRECT");
+	printf("\n\n");
 
 
 	// ============================ THIRD KERNEL: PROGRAM IN x86-64 SIMD AVX2 XMM REGISTER ============================
+	fail = 0;
 	k3_elapse = 0;
 	for (j = 0; j < TEST_NUM; j++) {
 		QueryPerformanceCounter(&li);
@@ -231,20 +245,25 @@ int main() {
 		k3_elapse += ((double)(end - start)) * 1000.0 / PCFreq;
 
 		// Check if the output is correct by comparing it to the output of the first kernel
-		int fail = 0;
 		for (i = 0; i < ARRAY_SIZE; i++) {
 			if (Z[i] != A[i])
 				fail += 1;
 		}
-		if (fail > 0)
-			printf("Failed %d times", fail);
 
 		zeroOut(ARRAY_SIZE, A);
 	}
-	printf("Average Time in SIMD XMM = %f ms\n \n", k3_elapse / TEST_NUM);
+	printf("[ SIMD XMM (128-bit) Kernel ]\n");
+	printf("  Average Time:       %f ms\n", k3_elapse / TEST_NUM);
+
+	if (fail > 0)
+		printf("  Output Status:      FAILED");
+	else
+		printf("  Output Status:      CORRECT");
+	printf("\n\n");
 	
 
 	// ============================ FOURTH KERNEL: PROGRAM IN x86-64 SIMD AVX2 YMM REGISTER ============================
+	fail = 0;
 	k4_elapse = 0;
 	for (j = 0; j < TEST_NUM; j++) {
 		QueryPerformanceCounter(&li);
@@ -252,20 +271,31 @@ int main() {
 		vecaddmulymm(ARRAY_SIZE, A, B, C, D);
 		QueryPerformanceCounter(&li);
 		end = li.QuadPart;
-		k4_elapse = ((double)(end - start)) * 1000.0 / PCFreq;
+		k4_elapse += ((double)(end - start)) * 1000.0 / PCFreq;
 
 		// Check if the output is correct by comparing it to the output of the first kernel
-		int fail = 0;
 		for (i = 0; i < ARRAY_SIZE; i++) {
 			if (Z[i] != A[i])
 				fail += 1;
 		}
-		if (fail > 0)
-			printf("Failed %d times", fail);
 
 		zeroOut(ARRAY_SIZE, A);
 	}
-	printf("Average Time in SIMD YMM = %f ms\n \n", k4_elapse / TEST_NUM);
+	printf("[ SIMD YMM (256-bit) Kernel ]\n");
+	printf("  Average Time:       %f ms\n", k4_elapse / TEST_NUM);
+
+	if (fail > 0)
+		printf("  Output Status:      FAILED");
+	else
+		printf("  Output Status:      CORRECT");
+	printf("\n\n");
+
+	// Free memory
+	free(A);
+	free(B);
+	free(C);
+	free(D);
+	free(Z);
 
 
 	return 0;
