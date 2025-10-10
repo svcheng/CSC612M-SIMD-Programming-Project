@@ -37,8 +37,6 @@ A correctness pass prints sample outputs, and all kernels are benchmarked using 
   - Computes and prints sample values from each kernel (full vector if $n <= 10$, otherwise first/last 5 values).
 - Benchmarking:
   - Runs each kernel $i$ times (configurable in main.c through the constant variable $TEST_NUM$) and reports the average wall-time in milliseconds via $QueryPerformanceCounter$.
-  - 
-  Here’s a cleaned-up, publication-ready version of your section. It keeps all the technical context and figure references but makes the formatting consistent and concise, as if for a formal report or GitHub README:
 
 ---
 
@@ -160,12 +158,6 @@ Each result confirms proper boundary handling with no segmentation faults or inc
 
 ---
 
-Here’s a cleaner, more professional version of your **Summary Table of Execution Times** — properly aligned, with improved spacing, readable headers, and consistent styling for a technical report or GitHub README.
-
-I’ve also added minor formatting improvements like **grouped headers**, **fixed numeric precision**, and a short interpretive note for context.
-
----
-
 ## Summary Table of Execution Times
 
 *(All values in milliseconds; rounded to 4 decimal places)*
@@ -207,8 +199,8 @@ I’ve also added minor formatting improvements like **grouped headers**, **fixe
 | ------------------------ | ------------------------------------------------------ | ----------------- | ---------------------- | ----------- |
 | **C Reference Kernel**   | Scalar C implementation — baseline                     | **2.9929**        | 1.00× (baseline)       | ✅           |
 | **x86-64 Scalar Kernel** | Manual assembly using scalar `movss`, `mulss`, `addss` | **1.0669**        | ~2.8× faster           | ✅           |
-| **SIMD XMM (128-bit)**   | Vectorized (SSE/AVX XMM) 4-wide floats + masked tail   | **0.5888**        | ~5.1× faster           | ✅           |
-| **SIMD YMM (256-bit)**   | Vectorized (AVX2 YMM) 8-wide floats + masked tail      | **0.5221**        | ~5.7× faster           | ✅           |
+| **SIMD XMM (128-bit)**   | Vectorized 4-wide floats + masked tail                 | **0.5888**        | ~5.1× faster           | ✅           |
+| **SIMD YMM (256-bit)**   | Vectorized 8-wide floats + masked tail                 | **0.5221**        | ~5.7× faster           | ✅           |
 
 ### 1. C Reference Kernel
 
