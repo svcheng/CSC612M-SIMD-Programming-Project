@@ -171,8 +171,8 @@ int main() {
 	// Initialize Array
 	for (i = 0; i < ARRAY_SIZE; i++) {
 		B[i] = (float)sin(i * 0.001);
-		C[i] = (float)sin(i * 0.002);
-		D[i] = (float)sin(i * 0.001 + 1.0);
+		C[i] = (float)cos(i * 0.002);
+		D[i] = (float)tan(i * 0.0005 + 1.0);
 	}
 
 	// check for correctness
