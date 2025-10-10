@@ -17,10 +17,10 @@ A correctness pass prints sample outputs, and all kernels are benchmarked using 
 ## Repository Layout
 ```
 / (root)
-├─ main.c # driver, timing, correctness checks
+├─ main.c              # driver, timing, correctness checks
 ├─ vecaddmulx86_64.asm # scalar x86-64 kernel
-├─ vecaddmulxmm.asm # XMM, 128-bit kernel + tail mask table
-├─ vecaddmulymm.asm # YMM, 256-bit kernel + tail mask table
+├─ vecaddmulxmm.asm    # XMM, 128-bit kernel + tail mask table
+├─ vecaddmulymm.asm    # YMM, 256-bit kernel + tail mask table
 └─ README.md # this file
 ```
 
@@ -46,9 +46,9 @@ Performance in **Debug mode** was measured across progressively larger vector si
 
 | Input Size | Screenshot                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
-| $2^{20}    | <img width="824" height="529" alt="image" src="https://github.com/user-attachments/assets/b8d12ed6-72ec-45bd-97b7-4197329bf949" /> |
-| $2^{26}    | <img width="811" height="507" alt="image" src="https://github.com/user-attachments/assets/32f795a4-d8d8-4988-9e35-381c062bd7e2" /> |
-| $2^{28}    | <img width="812" height="524" alt="image" src="https://github.com/user-attachments/assets/75ed560d-ae0b-451f-8707-900cf1aa72fe" /> |
+| $2^{20}$   | <img width="824" height="529" alt="image" src="https://github.com/user-attachments/assets/b8d12ed6-72ec-45bd-97b7-4197329bf949" /> |
+| $2^{26}$   | <img width="811" height="507" alt="image" src="https://github.com/user-attachments/assets/32f795a4-d8d8-4988-9e35-381c062bd7e2" /> |
+| $2^{28}$   | <img width="812" height="524" alt="image" src="https://github.com/user-attachments/assets/75ed560d-ae0b-451f-8707-900cf1aa72fe" /> |
 
 ---
 
@@ -59,9 +59,9 @@ Results show substantial performance gains over Debug mode, validating proper co
 
 | Input Size | Screenshot                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
-| $2^{20}    | <img width="814" height="523" alt="image" src="https://github.com/user-attachments/assets/9255c48d-cb8a-4143-833e-63a3ee8c7734" /> |
-| $2^{26}    | <img width="813" height="524" alt="image" src="https://github.com/user-attachments/assets/77747e4c-5633-402b-8806-009ee9ae038e" /> |
-| $2^{28}    | <img width="823" height="529" alt="image" src="https://github.com/user-attachments/assets/d8290c54-d1d7-4157-8ae3-87089cac31e2" /> |
+| $2^{20}$   | <img width="814" height="523" alt="image" src="https://github.com/user-attachments/assets/9255c48d-cb8a-4143-833e-63a3ee8c7734" /> |
+| $2^{26}$   | <img width="813" height="524" alt="image" src="https://github.com/user-attachments/assets/77747e4c-5633-402b-8806-009ee9ae038e" /> |
+| $2^{28}$   | <img width="823" height="529" alt="image" src="https://github.com/user-attachments/assets/d8290c54-d1d7-4157-8ae3-87089cac31e2" /> |
 
 ---
 
@@ -148,11 +148,11 @@ Each result shown below confirms proper boundary handling with no segmentation f
 
 <img src="https://github.com/user-attachments/assets/80537612-7e63-48f0-a6e9-05ba7c7df060" width="850" />
 
-### Input Size: $2^10$ + 3
+### Input Size: $2^{10}$ + 3
 
 <img src="https://github.com/user-attachments/assets/ce096108-a53c-47ca-b289-eb11d50d112c" width="850" />
 
-### Input Size: $2^20$ + 7
+### Input Size: $2^{20}$ + 7
 
 <img src="https://github.com/user-attachments/assets/7108afff-e809-43e5-968d-cc28473bd12a" width="850" />
 
@@ -166,17 +166,17 @@ Each result shown below confirms proper boundary handling with no segmentation f
 
 | **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
 | :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
-|     $2^{20}    |           2.6223 |               1.1926 |             **0.9538** |                 1.0293 |
-|     $2^{26}    |         157.5850 |              72.0365 |                66.9026 |            **64.4475** |
-|     $2^{28}    |         638.6596 |             328.8114 |               286.1022 |           **283.1424** |
+|     $2^{20}$   |           2.6223 |               1.1926 |             **0.9538** |                 1.0293 |
+|     $2^{26}$   |         157.5850 |              72.0365 |                66.9026 |            **64.4475** |
+|     $2^{28}$   |         638.6596 |             328.8114 |               286.1022 |           **283.1424** |
 
 ### **Release Mode Results**
 
 | **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
 | :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
-|    $2^{20}     |           1.6153 |               1.6468 |             **0.7475** |                 0.7908 |
-|    $2^{26}     |          88.1513 |             120.4012 |            **78.8263** |                82.9230 |
-|    $2^{28}     |         288.6141 |             397.4300 |               264.9209 |           **261.5920** |
+|    $2^{20}$    |           1.6153 |               1.6468 |             **0.7475** |                 0.7908 |
+|    $2^{26}$    |          88.1513 |             120.4012 |            **78.8263** |                82.9230 |
+|    $2^{28}$    |         288.6141 |             397.4300 |               264.9209 |           **261.5920** |
 
 ### Key Observations
 
