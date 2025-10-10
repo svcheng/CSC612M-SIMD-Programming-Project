@@ -51,4 +51,42 @@ Vectors $B$, $C$, and $D$ were initialized as follows:
 
 ## Summary Table of Execution Times
 
+Note: decimals rounded to 4 places
+
+### Debug Mode
+
+| Input Size | Kernel   | Execution Time (ms) |
+| ---------- | -------- | ------------------- |
+| 2^20       | C        | 3.3663              |
+| 2^20       | x86      | 2.0647              |
+| 2^20       | SIMD XMM | 1.8149              |
+| 2^20       | SIMD YMM | 0.0954              |
+| 2^26       | C        | 165.0952            |
+| 2^26       | x86      | 100.9830            |
+| 2^26       | SIMD XMM | 86.0887             |
+| 2^26       | SIMD YMM | 2.8291              |
+| 2^28       | C        | 655.9969            |
+| 2^28       | x86      | 322.2668            |
+| 2^28       | SIMD XMM | 304.7617            |
+| 2^28       | SIMD YMM | 9.3012              |
+
+### Release Mode
+
+| Input Size | Kernel   | Execution Time (ms) |
+| ---------- | -------- | ------------------- |
+| 2^20       | C        | 1.4124              |
+| 2^20       | x86      | 1.6683              |
+| 2^20       | SIMD XMM | 1.1171              |
+| 2^20       | SIMD YMM | 0.0270              |
+| 2^26       | C        | 81.2926             |
+| 2^26       | x86      | 104.3931            |
+| 2^26       | SIMD XMM | 76.0268             |
+| 2^26       | SIMD YMM | 2.5403              |
+| 2^28       | C        | 279.3449            |
+| 2^28       | x86      | 415.01497           |
+| 2^28       | SIMD XMM | 270.2237            |
+| 2^28       | SIMD YMM | 8.7021              |
+
+### Analysis
+
 ## Discussion
