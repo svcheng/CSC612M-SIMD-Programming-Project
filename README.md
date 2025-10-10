@@ -166,28 +166,21 @@ Each result confirms proper boundary handling with no segmentation faults or inc
 
 | **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
 | :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
-|       2²⁰      |           3.3663 |               2.0647 |                 1.8149 |             **0.0954** |
-|       2²⁶      |         165.0952 |             100.9830 |                86.0887 |             **2.8291** |
-|       2²⁸      |         655.9969 |             322.2668 |               304.7617 |             **9.3012** |
-
-*In Debug mode, SIMD YMM consistently achieved the fastest performance, outperforming the scalar versions by over an order of magnitude.*
-
+|       2²⁰      |           2.6223 |               1.1926 |             **0.9538** |                 1.0293 |
+|       2²⁶      |         157.5850 |              72.0365 |                66.9026 |            **64.4475** |
+|       2²⁸      |         638.6596 |             328.8114 |               286.1022 |           **283.1424** |
 
 ### **Release Mode Results**
 
 | **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
 | :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
-|       2²⁰      |           1.4124 |               1.6683 |                 1.1171 |             **0.0270** |
-|       2²⁶      |          81.2926 |             104.3931 |                76.0268 |             **2.5403** |
-|       2²⁸      |         279.3449 |             415.0150 |               270.2237 |             **8.7021** |
-
-*In Release mode, compiler-optimized C nearly matches or surpasses the scalar assembly version, while SIMD YMM remains dominant with the lowest execution times.*
-
+|       2²⁰      |           1.6153 |               1.6468 |             **0.7475** |                 0.7908 |
+|       2²⁶      |          88.1513 |             120.4012 |            **78.8263** |                82.9230 |
+|       2²⁸      |         288.6141 |             397.4300 |               264.9209 |           **261.5920** |
 
 ### Key Observations
 
 * SIMD (XMM/YMM) kernels consistently outperform scalar implementations.
-* The YMM version provides the best overall performance due to 8-float parallelism.
 * In Release mode, **x86 scalar assembly becomes slower** because the compiler optimizes C aggressively, while manual assembly remains static.
 * The scaling trend (2²⁰ → 2²⁸) shows near-linear growth for all kernels, confirming stable computation efficiency across input sizes.
 
@@ -195,19 +188,19 @@ Each result confirms proper boundary handling with no segmentation faults or inc
 
 ## Comparative Analysis
 
-| Kernel                   | Description                                            | Average Time (ms) | Relative Speed (vs. C) | Correctness |
-| ------------------------ | ------------------------------------------------------ | ----------------- | ---------------------- | ----------- |
-| **C Reference Kernel**   | Scalar C implementation — baseline                     | **2.9929**        | 1.00× (baseline)       | ✅           |
-| **x86-64 Scalar Kernel** | Manual assembly using scalar `movss`, `mulss`, `addss` | **1.0669**        | ~2.8× faster           | ✅           |
-| **SIMD XMM (128-bit)**   | Vectorized 4-wide floats + masked tail                 | **0.5888**        | ~5.1× faster           | ✅           |
-| **SIMD YMM (256-bit)**   | Vectorized 8-wide floats + masked tail                 | **0.5221**        | ~5.7× faster           | ✅           |
+A comparison table is presented below for clearer visualization of the performance differences among the four kernels. The average execution times were measured in Debug Mode using an input size of 2²⁸ elements. This specific input size was selected to ensure that each kernel processed a sufficiently large dataset, thereby highlighting differences in computation efficiency and memory throughput under realistic, high-load conditions. Meanwhile, Debug Mode was used to provide a more transparent view of raw instruction execution, minimizing compiler optimizations that could obscure the inherent performance characteristics of each kernel. 
+
+| Kernel                   | Description                                            | Average Time in Debug Mode (ms) | Relative Speed (vs. C) | Correctness |
+| ------------------------ | ------------------------------------------------------ | ------------------------------- | ---------------------- | ----------- |
+| **C Reference Kernel**   | Scalar C implementation — baseline                     | **638.6596**                    | 1.00× (baseline)       | ✅         |
+| **x86-64 Scalar Kernel** | Manual assembly using scalar `movss`, `mulss`, `addss` | **328.8114**                    | ~1.9× faster           | ✅         |
+| **SIMD XMM (128-bit)**   | Vectorized 4-wide floats + masked tail                 | **286.1022**                    | ~2.2× faster           | ✅         |
+| **SIMD YMM (256-bit)**   | Vectorized 8-wide floats + masked tail                 | **283.1424**                    | ~2.3× faster           | ✅         |
 
 ### 1. C Reference Kernel
 
 The pure C version (`vecaddmulc`) serves as the **baseline** implementation. It processes one element per loop iteration, relying entirely on the compiler’s scalar floating-point operations.
 While simple and portable, it’s limited by the fact that each iteration executes serially, with no explicit instruction-level parallelism.
-
-
 
 ### 2. x86-64 Scalar Assembly Kernel
 
@@ -217,9 +210,7 @@ The key performance difference comes from:
 * **Reduced overhead**: tighter loop, manual register management.
 * **No function call abstraction**: less compiler-inserted code.
 
-However, it still executes one float at a time, meaning **no vectorization** or parallel arithmetic occurs. Its ~2.8× speedup mainly comes from eliminating C-level overhead and optimizing the instruction path, not true parallelism.
-
-
+However, it still executes one float at a time, meaning **no vectorization** or parallel arithmetic occurs. Its ~1.9× speedup mainly comes from eliminating C-level overhead and optimizing the instruction path, not true parallelism.
 
 ### 3. SIMD XMM (128-bit) Kernel
 
@@ -230,20 +221,18 @@ Key optimizations:
 * **Unaligned loads/stores (`vmovdqu`)**, allowing flexible memory access.
 * **Tail masking** via `vmaskmovps` ensures safety when `n % 4 ≠ 0`.
 
-The performance gain (~5× faster than C) shows clear SIMD benefit, though the improvement is slightly limited by:
+The performance gain (~2.2× faster than C) shows clear SIMD benefit, though the improvement is slightly limited by:
 
 * **Masking overhead** (for the tail).
 * **Partial utilization** if data isn’t perfectly aligned to cache lines.
 * Slight **loop overhead** remaining from the iteration control.
-
-
 
 ### 4. SIMD YMM (256-bit) Kernel
 
 The YMM kernel (`vecaddmulymm`) expands SIMD width to **256 bits**, processing **eight floats per iteration**.
 This effectively doubles the data throughput compared to XMM while keeping similar instruction count per loop.
 
-Reasons for the modest gain (~10–15% faster than XMM, not 2×):
+Reasons for the modest gain (~1.01x faster than XMM, not 2×):
 
 * **Memory bandwidth** becomes a limiting factor. The CPU can only fetch/store so fast, even if arithmetic doubles.
 * **Instruction decoding and loop control** still consume cycles.
@@ -337,7 +326,7 @@ The final results show a clear performance progression:
 
 > **C (baseline)** → **Scalar x86** → **SIMD XMM** → **SIMD YMM**
 
-Each step introduced a tangible efficiency gain, culminating in nearly **6× total acceleration** without loss of accuracy.
+Each step introduced a tangible efficiency gain, culminating in nearly **2× total acceleration** without loss of accuracy.
 Beyond raw speed, the project strengthened understanding of **low-level computation**, **data alignment**, **mask-based safety**, and the practical aspects of writing and benchmarking optimized SIMD code in a real environment.
 
 ---
