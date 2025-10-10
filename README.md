@@ -7,8 +7,8 @@ $A[i] = B[i] + C[i] * D[i]$, for $i$ in $[0, n)$.
 Kernels:
 1. **C reference** (`vecaddmulc`) – portable baseline in C.
 2. **Scalar x86-64** (`vecaddmulx86_64`) – assembly with scalar `movss/mulss/addss`.
-3. **SIMD AVX/XMM** (`vecaddmulxmm`) – 128-bit vectors (4 floats per step) with masked tail.
-4. **SIMD AVX2/YMM** (`vecaddmulymm`) – 256-bit vectors (8 floats per step) with masked tail.
+3. **SIMD XMM** (`vecaddmulxmm`) – 128-bit vectors (4 floats per step) with masked tail.
+4. **SIMD YMM** (`vecaddmulymm`) – 256-bit vectors (8 floats per step) with masked tail.
 
 A correctness pass prints sample outputs, and all kernels are benchmarked using the methods $QueryPerformanceQuery$ and $QueryPerformanceCounter$ from the $windows.h$ c library.
 
@@ -19,8 +19,8 @@ A correctness pass prints sample outputs, and all kernels are benchmarked using 
 / (root)
 ├─ main.c # driver, timing, correctness checks
 ├─ vecaddmulx86_64.asm # scalar x86-64 kernel
-├─ vecaddmulxmm.asm # AVX (XMM, 128-bit) kernel + tail mask table
-├─ vecaddmulymm.asm # AVX2 (YMM, 256-bit) kernel + tail mask table
+├─ vecaddmulxmm.asm # XMM, 128-bit kernel + tail mask table
+├─ vecaddmulymm.asm # YMM, 256-bit kernel + tail mask table
 └─ README.md # this file
 ```
 
