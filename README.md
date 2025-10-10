@@ -27,16 +27,16 @@ A correctness pass prints sample outputs, and all kernels are benchmarked using 
 ---
 
 ## What the Program Does
-- Allocates A, B, C, D with n = 2^n floats (configurable in main.c through the constant variable $ARRAY_SIZE$).
+- Allocates A, B, C, D with n = 2^n floats (configurable in main.c through the constant variable `ARRAY_SIZE`).
 - Initializes B, C, and D with sine, cosine, and tangent patterns, as shown below:
   - $B[i]=\sin(i*0.001)$
   - $C[i]=\cos(i*0.002)$
   - $D[i]=\tan(i*0.0005 + 1.0)$
 
 - Correctness checks:
-  - Computes and prints sample values from each kernel (full vector if $n <= 10$, otherwise first/last 5 values).
+  - Computes and prints sample values from each kernel (full vector if $n \le 10$, otherwise first/last 5 values).
 - Benchmarking:
-  - Runs each kernel $i$ times (configurable in main.c through the constant variable $TEST_NUM$) and reports the average wall-time in milliseconds via $QueryPerformanceCounter$.
+  - Runs each kernel $k$ times (configurable in main.c through the constant variable `TEST_NUM`) and reports the average wall-time in milliseconds via $QueryPerformanceCounter$.
 
 ---
 
@@ -46,9 +46,9 @@ Performance in **Debug mode** was measured across progressively larger vector si
 
 | Input Size | Screenshot                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
-| 2²⁰        | <img width="824" height="529" alt="image" src="https://github.com/user-attachments/assets/b8d12ed6-72ec-45bd-97b7-4197329bf949" /> |
-| 2²⁶        | <img width="811" height="507" alt="image" src="https://github.com/user-attachments/assets/32f795a4-d8d8-4988-9e35-381c062bd7e2" /> |
-| 2²⁸        | <img width="812" height="524" alt="image" src="https://github.com/user-attachments/assets/75ed560d-ae0b-451f-8707-900cf1aa72fe" /> |
+| $2^{20}    | <img width="824" height="529" alt="image" src="https://github.com/user-attachments/assets/b8d12ed6-72ec-45bd-97b7-4197329bf949" /> |
+| $2^{26}    | <img width="811" height="507" alt="image" src="https://github.com/user-attachments/assets/32f795a4-d8d8-4988-9e35-381c062bd7e2" /> |
+| $2^{28}    | <img width="812" height="524" alt="image" src="https://github.com/user-attachments/assets/75ed560d-ae0b-451f-8707-900cf1aa72fe" /> |
 
 ---
 
@@ -59,9 +59,9 @@ Results show substantial performance gains over Debug mode, validating proper co
 
 | Input Size | Screenshot                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
-| 2²⁰        | <img width="814" height="523" alt="image" src="https://github.com/user-attachments/assets/9255c48d-cb8a-4143-833e-63a3ee8c7734" /> |
-| 2²⁶        | <img width="813" height="524" alt="image" src="https://github.com/user-attachments/assets/77747e4c-5633-402b-8806-009ee9ae038e" /> |
-| 2²⁸        | <img width="823" height="529" alt="image" src="https://github.com/user-attachments/assets/d8290c54-d1d7-4157-8ae3-87089cac31e2" /> |
+| $2^{20}    | <img width="814" height="523" alt="image" src="https://github.com/user-attachments/assets/9255c48d-cb8a-4143-833e-63a3ee8c7734" /> |
+| $2^{26}    | <img width="813" height="524" alt="image" src="https://github.com/user-attachments/assets/77747e4c-5633-402b-8806-009ee9ae038e" /> |
+| $2^{28}    | <img width="823" height="529" alt="image" src="https://github.com/user-attachments/assets/d8290c54-d1d7-4157-8ae3-87089cac31e2" /> |
 
 ---
 
@@ -77,7 +77,7 @@ Without handling that remainder, it will either skip those elements or read/writ
 
 To handle remainders safely, the code includes a **boundary check** and uses **masking**.
 
-1. **Loop Until Near the End**
+1. **Loop Until Near the End:**
    Each kernel has a main loop that runs while `n ≥ 4` (for XMM) or `n ≥ 8` (for YMM).
    It processes full vectors using:
 
@@ -88,10 +88,10 @@ To handle remainders safely, the code includes a **boundary check** and uses **m
    vmovdqu   → store
    ```
 
-2. **Check for Remaining Elements**
+2. **Check for Remaining Elements:**
    When the remaining element count (`r13`) becomes smaller than 4 (for XMM) or 8 (for YMM), the code jumps to a label called `bound_check:`.
 
-3. **Load the Right Mask**
+3. **Load the Right Mask:**
    Each `.asm` file has a small **mask_table** declared in `.rodata`, which is a special memory section in an assembly program that stores constant data that never changes while the program runs.
 
    * For XMM: 4 entries
@@ -117,7 +117,7 @@ To handle remainders safely, the code includes a **boundary check** and uses **m
 
    → This loads the correct mask for however many elements are left.
 
-4. **Masked Load, Compute, Store**
+4. **Masked Load, Compute, Store:**
    Then, instead of a normal load/store, the code uses `vmaskmovps`:
 
    ```asm
@@ -142,17 +142,17 @@ If your total number of items doesn’t fit perfectly into full boxes, the last 
 * That’s what makes your program safe and correct even when `n` isn’t divisible by 4 or 8.
 
 To verify correct tail-masking behavior for vector sizes not divisible by 4 (XMM) or 8 (YMM), several non-power-of-two input sizes were tested.
-Each result confirms proper boundary handling with no segmentation faults or incorrect residual values.
+Each result shown below confirms proper boundary handling with no segmentation faults or incorrect residual values.
 
 ### Input Size: 1003
 
 <img src="https://github.com/user-attachments/assets/80537612-7e63-48f0-a6e9-05ba7c7df060" width="850" />
 
-### Input Size: 2¹⁰ + 3
+### Input Size: $2^10$ + 3
 
 <img src="https://github.com/user-attachments/assets/ce096108-a53c-47ca-b289-eb11d50d112c" width="850" />
 
-### Input Size: 2²⁰ + 7
+### Input Size: $2^20$ + 7
 
 <img src="https://github.com/user-attachments/assets/7108afff-e809-43e5-968d-cc28473bd12a" width="850" />
 
@@ -166,123 +166,105 @@ Each result confirms proper boundary handling with no segmentation faults or inc
 
 | **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
 | :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
-|       2²⁰      |           2.6223 |               1.1926 |             **0.9538** |                 1.0293 |
-|       2²⁶      |         157.5850 |              72.0365 |                66.9026 |            **64.4475** |
-|       2²⁸      |         638.6596 |             328.8114 |               286.1022 |           **283.1424** |
+|     $2^{20}    |           2.6223 |               1.1926 |             **0.9538** |                 1.0293 |
+|     $2^{26}    |         157.5850 |              72.0365 |                66.9026 |            **64.4475** |
+|     $2^{28}    |         638.6596 |             328.8114 |               286.1022 |           **283.1424** |
 
 ### **Release Mode Results**
 
 | **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
 | :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
-|       2²⁰      |           1.6153 |               1.6468 |             **0.7475** |                 0.7908 |
-|       2²⁶      |          88.1513 |             120.4012 |            **78.8263** |                82.9230 |
-|       2²⁸      |         288.6141 |             397.4300 |               264.9209 |           **261.5920** |
+|    $2^{20}     |           1.6153 |               1.6468 |             **0.7475** |                 0.7908 |
+|    $2^{26}     |          88.1513 |             120.4012 |            **78.8263** |                82.9230 |
+|    $2^{28}     |         288.6141 |             397.4300 |               264.9209 |           **261.5920** |
 
 ### Key Observations
 
-* SIMD (XMM/YMM) kernels consistently outperform scalar implementations.
-* In Release mode, **x86 scalar assembly becomes slower** because the compiler optimizes C aggressively, while manual assembly remains static.
-* The scaling trend (2²⁰ → 2²⁸) shows near-linear growth for all kernels, confirming stable computation efficiency across input sizes.
+* Execution time consistently increases with input size.
+* SIMD (XMM/YMM) kernels consistently outperform non-parallelized implementations.
+* In Release mode, x86 scalar assembly becomes **slower** than its C counterpart because the compiler optimizes C aggressively, while manual assembly remains the same.
 
 ---
 
 ## Comparative Analysis
 
-A comparison table is presented below for clearer visualization of the performance differences among the four kernels. The average execution times were measured in Debug Mode using an input size of 2²⁸ elements. This specific input size was selected to ensure that each kernel processed a sufficiently large dataset, thereby highlighting differences in computation efficiency and memory throughput under realistic, high-load conditions. Meanwhile, Debug Mode was used to provide a more transparent view of raw instruction execution, minimizing compiler optimizations that could obscure the inherent performance characteristics of each kernel. 
+### Speedup
 
-| Kernel                   | Description                                            | Average Time in Debug Mode (ms) | Relative Speed (vs. C) | Correctness |
-| ------------------------ | ------------------------------------------------------ | ------------------------------- | ---------------------- | ----------- |
-| **C Reference Kernel**   | Scalar C implementation — baseline                     | **638.6596**                    | 1.00× (baseline)       | ✅         |
-| **x86-64 Scalar Kernel** | Manual assembly using scalar `movss`, `mulss`, `addss` | **328.8114**                    | ~1.9× faster           | ✅         |
-| **SIMD XMM (128-bit)**   | Vectorized 4-wide floats + masked tail                 | **286.1022**                    | ~2.2× faster           | ✅         |
-| **SIMD YMM (256-bit)**   | Vectorized 8-wide floats + masked tail                 | **283.1424**                    | ~2.3× faster           | ✅         |
+A comparison table is presented below for clearer visualization of the performance differences among the four kernels. The average execution times were measured in Debug Mode using an input size of $2^{28}$ elements. The largest input size was selected to ensure that each kernel processed a sufficiently large dataset, thereby highlighting differences in performance under realistic, high-load conditions. Meanwhile, Debug Mode was used to provide a more transparent view of the kernels' performances, minimizing compiler optimizations that could obscure the inherent performance characteristics of each kernel. 
 
-### 1. C Reference Kernel
+| Kernel                   | Description                                            | Average Time in Debug Mode (ms) | Relative Speed (vs. C) |
+| ------------------------ | ------------------------------------------------------ | ------------------------------- | ---------------------- |
+| **C Reference Kernel**   | Scalar C implementation — baseline                     | **638.6596**                    | 1.00× (baseline)       |
+| **x86-64 Scalar Kernel** | Manual assembly using scalar `movss`, `mulss`, `addss` | **328.8114**                    | ~1.9× faster           |
+| **SIMD XMM (128-bit)**   | Vectorized 4-wide floats + masked tail                 | **286.1022**                    | ~2.2× faster           |
+| **SIMD YMM (256-bit)**   | Vectorized 8-wide floats + masked tail                 | **283.1424**                    | ~2.3× faster           |
 
-The pure C version (`vecaddmulc`) serves as the **baseline** implementation. It processes one element per loop iteration, relying entirely on the compiler’s scalar floating-point operations.
-While simple and portable, it’s limited by the fact that each iteration executes serially, with no explicit instruction-level parallelism.
+#### 1. C Reference Kernel
 
-### 2. x86-64 Scalar Assembly Kernel
+The pure C version (`vecaddmulc`) serves as the **baseline** implementation. It processes one element per loop iteration, relying entirely on the compiler’s scalar floating-point operations. It is limited by the fact that iterations execute serially, with no explicit instruction-level parallelism.
 
-The scalar assembly (`vecaddmulx86_64`) performs the **same operation manually** using x86-64 registers (`xmm0–xmm2`) with scalar float instructions (`movss`, `mulss`, `addss`).
+#### 2. x86-64 Scalar Assembly Kernel
+
+The scalar assembly (`vecaddmulx86_64`) performs the same operation manually using x86-64 registers (`xmm0–xmm2`) with scalar float instructions (`movss`, `mulss`, `addss`).
 The key performance difference comes from:
 
-* **Reduced overhead**: tighter loop, manual register management.
-* **No function call abstraction**: less compiler-inserted code.
+* Reduced overhead from tighter loop and manual register management.
+* Less compiler-inserted code since there is no function call abstraction.
 
-However, it still executes one float at a time, meaning **no vectorization** or parallel arithmetic occurs. Its ~1.9× speedup mainly comes from eliminating C-level overhead and optimizing the instruction path, not true parallelism.
+However, it still executes one float at a time, meaning no vectorization or parallelization occurs. Its ~1.9× speedup mainly comes from eliminating C-level overhead and optimizing the memory use.
 
-### 3. SIMD XMM (128-bit) Kernel
+#### 3. SIMD XMM (128-bit) Kernel
 
-The XMM kernel (`vecaddmulxmm`) introduces **data-level parallelism**. Each 128-bit register processes **four floats simultaneously** using vectorized instructions (`vmulps`, `vaddps`).
+The XMM kernel (`vecaddmulxmm`) improves upon the scalar assembly kernel by introducing **data-level parallelism**. Each 128-bit XMM register processes **four floats simultaneously** using vectorized instructions (`vmulps`, `vaddps`).
 Key optimizations:
 
-* **Four operations per instruction**, dramatically increasing throughput.
+* Dramatically increased throughput from four floats being processed simultaneously.
 * **Unaligned loads/stores (`vmovdqu`)**, allowing flexible memory access.
-* **Tail masking** via `vmaskmovps` ensures safety when `n % 4 ≠ 0`.
 
-The performance gain (~2.2× faster than C) shows clear SIMD benefit, though the improvement is slightly limited by:
+The performance gain over scalar assembly kernel (~2.2x instead of ~1.9x speedup) shows there is a performance benefit to using SIMD registers, though the improvement is slightly limited by:
 
 * **Masking overhead** (for the tail).
 * **Partial utilization** if data isn’t perfectly aligned to cache lines.
 * Slight **loop overhead** remaining from the iteration control.
 
-### 4. SIMD YMM (256-bit) Kernel
+#### 4. SIMD YMM (256-bit) Kernel
 
-The YMM kernel (`vecaddmulymm`) expands SIMD width to **256 bits**, processing **eight floats per iteration**.
-This effectively doubles the data throughput compared to XMM while keeping similar instruction count per loop.
+The YMM kernel (`vecaddmulymm`) uses the YMM registers instead of XMM, which can store 256 bits instead of 128, and process eight floats per iteration instead of 4.
+In theory, this effectively doubles the data throughput compared to XMM, however our test results only show a slight improvement over the XMM kernel (~2.3x speedup vs. ~2.2x).
 
-Reasons for the modest gain (~1.01x faster than XMM, not 2×):
+Possible reasons for the gain being small:
 
 * **Memory bandwidth** becomes a limiting factor. The CPU can only fetch/store so fast, even if arithmetic doubles.
 * **Instruction decoding and loop control** still consume cycles.
 * **Cache and prefetch efficiency**: larger registers can increase pressure on memory bandwidth for large datasets.
+* **Randomness** in execution times resulting from nondeterministic process scheduling
+* **Hardware/OS-specific quirks**: tests were run on a Windows machine with an Intel i5-9300H CPU.
 
 Despite these constraints, YMM delivers the fastest performance overall, maintaining correctness and stable runtime across tests.
 
-### Additional Insight: Debug Mode vs. Release Mode Behavior
+### Debug Mode vs. Release Mode Behavior
 
-An interesting observation from the tests was that the **x86-64 scalar assembly kernel** actually ran **slower in Release mode** than in Debug mode.
-At first, this seems counterintuitive — Release builds are typically faster due to compiler optimizations. However, several technical factors explain why this occurred:
-
-1. **Compiler optimizations favor C code, not external assembly.**
-   In Release mode, the compiler aggressively optimizes C functions (through loop unrolling, instruction scheduling, vectorization, and register reuse).
-   In contrast, the manually written `x86_64` assembly kernel is treated as a fixed external function — the compiler cannot analyze or optimize it.
-   As a result, optimized C code in Release mode can sometimes **outperform scalar assembly**.
-
-2. **Debug mode preserves the original instruction flow.**
-   In Debug mode, the compiler applies minimal optimization, allowing the assembly routine to execute exactly as written.
-   This can benefit simple scalar routines that rely on predictable instruction order and timing.
-
-3. **Stack frame and alignment differences.**
-   Release mode often omits frame pointers and may realign stack variables for optimization.
-   Since the assembly kernel accesses parameters directly from the stack (e.g., `[rbp+32]`), these differences can slightly affect memory access latency, causing small slowdowns.
-
-4. **Optimization paradox.**
-   Because the scalar assembly was already manually optimized, Release mode provided **no additional gains** — instead, it made the compiler-generated C code proportionally faster.
-   The end result is a paradox where the hand-tuned assembly appears slower only because the surrounding C code was further optimized.
-
-This finding highlights a valuable insight:
+The performance of the x86-64 scalar kernel performed strangely in release mode. While it consistently outperformed the C kernel in debug mode, it was consistently **outperformed** by C in release mode. This can be explained by the fact the in release mode, the compiler aggressively optimizes C functions (e.g. through loop unrolling, instruction scheduling, vectorization, and register reuse), whereas assembly code is not modified much or at all. The optimizations can be enough for the C version of the kernel to outperform a non-parallel assembly implementation. This finding highlights a valuable insight:
 
 > **Handwritten scalar assembly is not always faster than compiler-optimized C**, especially for simple arithmetic operations where the compiler can automatically apply SIMD vectorization and instruction scheduling.
 
+Another interesting observation that can be made is that the x86-64 scalar assembly kernel actually ran **slower relative to itself** in release mode than in debug mode. Though the other assembly kernels were also sometimes slower in release mode, the x86-64 scalar kernel was **consistently** slower. This may just be a result of randomness, however, a technical reason that might explain why this occurred is the **stack frame and alignment differences** in release mode. Release mode often omits frame pointers and may realign stack variables for optimization. Since the assembly kernel accesses parameters directly from the stack (e.g., `[rbp+32]`), these differences can slightly affect memory access latency, causing slowdowns.
+ 
 ---
 
 ## Discussion: Process, Problems, and AHA Moments
 
 ### Methodology
 
-The project followed a **progressive optimization methodology**:
+The project followed the following methodology:
 
-1. **Start with correctness** — implement a clear, reliable baseline in C.
-2. **Port to assembly** — reproduce the same logic using scalar instructions to understand register operations and stack conventions.
-3. **Add SIMD (XMM)** — introduce vectorization, handling boundary conditions and verifying correctness.
-4. **Extend SIMD (YMM)** — double data width and refine mask logic for safety.
-5. **Benchmark and compare** — use `QueryPerformanceCounter` to obtain high-resolution timings for objective evaluation.
+1. Start by ensuring correctness by implementing a simple, reliable baseline in C.
+2. Port to assembly — reproduce the same logic using scalar instructions.
+3. Parallelize — introduce vectorization by using SIMD XMM registers, verifying correctness and making sure to handle boundary conditions.
+4. Extend with (YMM) — use SIMD registers with double the width and refine mask logic to maintain correctness when boundary elements are present.
+5. Benchmark and compare — use `QueryPerformanceCounter` from `Windows.h` to obtain high-resolution execution times in order to measure speedups and compare performance between kernels.
 
-This systematic, bottom-up approach ensured each optimization step was verified against the baseline before moving forward.
-
-
+This systematic, bottom-up approach ensured each kernel was correctly implemented.
 
 ### Problems Encountered and How They Were Solved
 
@@ -296,44 +278,29 @@ This systematic, bottom-up approach ensured each optimization step was verified 
 
 **2. Stack Frame & Calling Convention (Win64 ABI)**
 
-* **Problem:** The fifth argument (`D`) isn’t passed in a register in Win64; it must be retrieved from the stack. Early attempts used wrong offsets, causing crashes.
+* **Problem:** The fifth argument (`D`) isn’t passed in a register in Win64; it must be retrieved from the stack. Early attempts did not properly retrieve the parameter from the stack, causing crashes.
 * **Solution:** Corrected stack offset handling in assembly (`[rbp+32]`), ensuring the proper retrieval of pointer arguments.
 * **AHA moment:** understanding how the **Windows x64 calling convention** works (RCX, RDX, R8, R9, then stack).
 
 
 
-**3. Timing Accuracy and Output Locking**
+**3. Measuring and Comparing Execution Time Accurately**
 
-* **Problem:** Early timings fluctuated heavily between runs.
-* **Solution:** Repeated each kernel 30×, averaged results, and used `QueryPerformanceFrequency` for stable conversion to milliseconds.
-* **AHA moment:** discovering that micro-benchmarks require averaging to eliminate timer granularity and background jitter.
-
-
+* **Problem:** Timings fluctuate heavily between runs.
+* **Solution:** Repeated the test for each kernel 30× then averaged results, and used `QueryPerformanceFrequency` for high resolution measurements.
+* **AHA moment:** discovering that micro-benchmarks require averaging to work around inconsistent timings and background "jitter".
 
 ### Overall Reflections & Learning Outcomes
 
-* **Performance isn’t just about faster math** — it’s about balancing arithmetic throughput, memory bandwidth, and instruction flow.
-* **Assembly requires precision** — every register, instruction, and calling convention detail matters.
-* **Validation is critical** — correctness checks and zeroing out arrays after each run ensured confidence in results.
-* **Incremental improvement** works best — debugging a small, verified piece at each stage prevented cascading errors.
-* **Vectorization feels like “unlocking” the hardware** — the jump from scalar to SIMD demonstrated firsthand how CPUs achieve parallel performance.
-
-
-
-### Conclusion
-
-The final results show a clear performance progression:
-
-> **C (baseline)** → **Scalar x86** → **SIMD XMM** → **SIMD YMM**
-
-Each step introduced a tangible efficiency gain, culminating in nearly **2× total acceleration** without loss of accuracy.
-Beyond raw speed, the project strengthened understanding of **low-level computation**, **data alignment**, **mask-based safety**, and the practical aspects of writing and benchmarking optimized SIMD code in a real environment.
+* Using SIMD parallelism is beneficial for reducing execution time, even compared to optimized C code.
+* Real-world performance is not exactly the same as theoretical performance. Due to external factors like the compiler, hardware, OS, programs may perform slower or faster than we expect.
+* The techniques used to compare the runtimes of different methods must be adapted to deal with inconsistency (e.g. averaging over many runs).
 
 ---
 
 ## Declaration of AI Usage
 
-This project utilized **OpenAI’s GPT-5 (ChatGPT)** *solely* for the purpose of improving the **documentation, structure, and readability** of this repository — particularly the GitHub **README**.
+This project utilized **OpenAI’s GPT-5 (ChatGPT)** solely for the purpose of improving the **documentation, structure, and readability** of this repository — particularly the GitHub README.
 
 AI assistance was confined to:
 
@@ -342,8 +309,8 @@ AI assistance was confined to:
 * Structuring the comparative analysis and discussion sections for readability
 * Creating a consistent academic and technical tone across the documentation
 
-All **project ideas, algorithms, assembly code, analyses, and interpretations** were entirely authored by the authors.
-The AI did **not** generate or influence any conceptual, mathematical, or implementation-level content. It was purely used as a **writing and formatting aid**.
+The AI did **not** generate or influence any conceptual, mathematical, or implementation-level content. It was purely used as a writing and formatting aid.
+All project ideas, algorithms, assembly code, analyses, interpretations, etc. were entirely formulated by us.
 
 ### Prompts Used
 
