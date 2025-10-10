@@ -28,7 +28,7 @@ A correctness pass prints sample outputs, and all kernels are benchmarked using 
 
 ## What the Program Does
 - Allocates A, B, C, D with n = 2^n floats (configurable in main.c through the constant variable $ARRAY_SIZE$).
-- Initializes B, C, D with sine, cosine, and tangent patterns, as shown below:
+- Initializes B, C, and D with sine, cosine, and tangent patterns, as shown below:
   - $B[i]=\sin(i*0.001)$
   - $C[i]=\cos(i*0.002)$
   - $D[i]=\tan(i*0.0005 + 1.0)$
@@ -339,3 +339,29 @@ The final results show a clear performance progression:
 
 Each step introduced a tangible efficiency gain, culminating in nearly **6× total acceleration** without loss of accuracy.
 Beyond raw speed, the project strengthened understanding of **low-level computation**, **data alignment**, **mask-based safety**, and the practical aspects of writing and benchmarking optimized SIMD code in a real environment.
+
+---
+
+## Declaration of AI Usage
+
+This project utilized **OpenAI’s GPT-5 (ChatGPT)** *solely* for the purpose of improving the **documentation, structure, and readability** of this repository — particularly the GitHub **README**.
+
+AI assistance was confined to:
+
+* Rewording explanations for clarity and conciseness
+* Formatting Markdown elements (headings, tables, and summary boxes)
+* Structuring the comparative analysis and discussion sections for readability
+* Creating a consistent academic and technical tone across the documentation
+
+All **project ideas, algorithms, assembly code, analyses, and interpretations** were entirely authored by the authors.
+The AI did **not** generate or influence any conceptual, mathematical, or implementation-level content. It was purely used as a **writing and formatting aid**.
+
+### Prompts Used
+
+To ensure transparency, below are examples of actual prompts used when refining documentation and explanations:
+
+1. *“Can you rephrase this paragraph for the README to make it more formal and concise?”*
+2. *“Format this benchmark table neatly for GitHub Markdown.”*
+3. *“Turn my bullet points on the comparison of the four kernels (C, x86, XMM, YMM) to a neat section.”*
+4. *“Improve the README structure of the Analysis and Discussion section for clarity, keeping the technical meaning intact.”*
+
