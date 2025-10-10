@@ -202,6 +202,134 @@ Note: decimals rounded to 4 places
 | 2^28       | SIMD XMM | 270.2237            |
 | 2^28       | SIMD YMM | 8.7021              |
 
-### Analysis
+---
 
-## Discussion
+## Comparative Analysis
+
+| Kernel                   | Description                                            | Average Time (ms) | Relative Speed (vs. C) | Correctness |
+| ------------------------ | ------------------------------------------------------ | ----------------- | ---------------------- | ----------- |
+| **C Reference Kernel**   | Scalar C implementation — baseline                     | **2.9929**        | 1.00× (baseline)       | ✅           |
+| **x86-64 Scalar Kernel** | Manual assembly using scalar `movss`, `mulss`, `addss` | **1.0669**        | ~2.8× faster           | ✅           |
+| **SIMD XMM (128-bit)**   | Vectorized (SSE/AVX XMM) 4-wide floats + masked tail   | **0.5888**        | ~5.1× faster           | ✅           |
+| **SIMD YMM (256-bit)**   | Vectorized (AVX2 YMM) 8-wide floats + masked tail      | **0.5221**        | ~5.7× faster           | ✅           |
+
+### 1. C Reference Kernel
+
+The pure C version (`vecaddmulc`) serves as the **baseline** implementation. It processes one element per loop iteration, relying entirely on the compiler’s scalar floating-point operations.
+While simple and portable, it’s limited by the fact that each iteration executes serially, with no explicit instruction-level parallelism.
+
+
+
+### 2. x86-64 Scalar Assembly Kernel
+
+The scalar assembly (`vecaddmulx86_64`) performs the **same operation manually** using x86-64 registers (`xmm0–xmm2`) with scalar float instructions (`movss`, `mulss`, `addss`).
+The key performance difference comes from:
+
+* **Reduced overhead**: tighter loop, manual register management.
+* **No function call abstraction**: less compiler-inserted code.
+
+However, it still executes one float at a time, meaning **no vectorization** or parallel arithmetic occurs. Its ~2.8× speedup mainly comes from eliminating C-level overhead and optimizing the instruction path, not true parallelism.
+
+
+
+### 3. SIMD XMM (128-bit) Kernel
+
+The XMM kernel (`vecaddmulxmm`) introduces **data-level parallelism**. Each 128-bit register processes **four floats simultaneously** using vectorized instructions (`vmulps`, `vaddps`).
+Key optimizations:
+
+* **Four operations per instruction**, dramatically increasing throughput.
+* **Unaligned loads/stores (`vmovdqu`)**, allowing flexible memory access.
+* **Tail masking** via `vmaskmovps` ensures safety when `n % 4 ≠ 0`.
+
+The performance gain (~5× faster than C) shows clear SIMD benefit, though the improvement is slightly limited by:
+
+* **Masking overhead** (for the tail).
+* **Partial utilization** if data isn’t perfectly aligned to cache lines.
+* Slight **loop overhead** remaining from the iteration control.
+
+
+
+### 4. SIMD YMM (256-bit) Kernel
+
+The YMM kernel (`vecaddmulymm`) expands SIMD width to **256 bits**, processing **eight floats per iteration**.
+This effectively doubles the data throughput compared to XMM while keeping similar instruction count per loop.
+
+Reasons for the modest gain (~10–15% faster than XMM, not 2×):
+
+* **Memory bandwidth** becomes a limiting factor. The CPU can only fetch/store so fast, even if arithmetic doubles.
+* **Instruction decoding and loop control** still consume cycles.
+* **Cache and prefetch efficiency**: larger registers can increase pressure on memory bandwidth for large datasets.
+
+Despite these constraints, YMM delivers the fastest performance overall, maintaining correctness and stable runtime across tests.
+
+
+
+### Summary of Insights
+
+* Moving from **C → scalar assembly** mainly reduces compiler overhead.
+* Moving from **scalar → XMM/YMM SIMD** yields **true parallel speedups** through vectorized floating-point math.
+* The **marginal difference between XMM and YMM** suggests the code has reached a **memory-throughput bound** rather than a compute bound — a common scenario in vectorized workloads.
+* All kernels produce identical results, confirming **functional equivalence** across implementations.
+
+---
+
+## Discussion: Process, Problems, and AHA Moments
+
+### Methodology
+
+The project followed a **progressive optimization methodology**:
+
+1. **Start with correctness** — implement a clear, reliable baseline in C.
+2. **Port to assembly** — reproduce the same logic using scalar instructions to understand register operations and stack conventions.
+3. **Add SIMD (XMM)** — introduce vectorization, handling boundary conditions and verifying correctness.
+4. **Extend SIMD (YMM)** — double data width and refine mask logic for safety.
+5. **Benchmark and compare** — use `QueryPerformanceCounter` to obtain high-resolution timings for objective evaluation.
+
+This systematic, bottom-up approach ensured each optimization step was verified against the baseline before moving forward.
+
+
+
+### Problems Encountered and How They Were Solved
+
+**1. Boundary Handling for Non-Divisible Vector Sizes**
+
+* **Problem:** When `n` wasn’t divisible by 4 (XMM) or 8 (YMM), partial vectors caused either incorrect results or memory violations.
+* **Solution:** Implemented **mask tables** in `.rodata` and used `vmaskmovps` for conditional load/store. This prevented invalid memory access while maintaining parallelism.
+* **AHA moment:** realizing `vmaskmovps` could safely handle tails without scalar fallback loops.
+
+
+
+**2. Stack Frame & Calling Convention (Win64 ABI)**
+
+* **Problem:** The fifth argument (`D`) isn’t passed in a register in Win64; it must be retrieved from the stack. Early attempts used wrong offsets, causing crashes.
+* **Solution:** Corrected stack offset handling in assembly (`[rbp+32]`), ensuring the proper retrieval of pointer arguments.
+* **AHA moment:** understanding how the **Windows x64 calling convention** works (RCX, RDX, R8, R9, then stack).
+
+
+
+**3. Timing Accuracy and Output Locking**
+
+* **Problem:** Early timings fluctuated heavily between runs.
+* **Solution:** Repeated each kernel 30×, averaged results, and used `QueryPerformanceFrequency` for stable conversion to milliseconds.
+* **AHA moment:** discovering that micro-benchmarks require averaging to eliminate timer granularity and background jitter.
+
+
+
+### Overall Reflections & Learning Outcomes
+
+* **Performance isn’t just about faster math** — it’s about balancing arithmetic throughput, memory bandwidth, and instruction flow.
+* **Assembly requires precision** — every register, instruction, and calling convention detail matters.
+* **Validation is critical** — correctness checks and zeroing out arrays after each run ensured confidence in results.
+* **Incremental improvement** works best — debugging a small, verified piece at each stage prevented cascading errors.
+* **Vectorization feels like “unlocking” the hardware** — the jump from scalar to SIMD demonstrated firsthand how CPUs achieve parallel performance.
+
+
+
+### Conclusion
+
+The final results show a clear performance progression:
+
+> **C (baseline)** → **Scalar x86** → **SIMD XMM** → **SIMD YMM**
+
+Each step introduced a tangible efficiency gain, culminating in nearly **6× total acceleration** without loss of accuracy.
+Beyond raw speed, the project strengthened understanding of **low-level computation**, **data alignment**, **mask-based safety**, and the practical aspects of writing and benchmarking optimized SIMD code in a real environment.
