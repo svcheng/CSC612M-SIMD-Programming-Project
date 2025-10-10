@@ -227,7 +227,7 @@ int main() {
 	printf("  Average Time:       %f ms\n", k2_elapse / TEST_NUM);
 
 	if (fail > 0)
-		printf("  Output Status:      FAILED");
+		printf("  Output Status:      FAILED (%zd incorrect results)", fail / TEST_NUM);
 	else
 		printf("  Output Status:      CORRECT");
 	printf("\n\n");
@@ -256,7 +256,7 @@ int main() {
 	printf("  Average Time:       %f ms\n", k3_elapse / TEST_NUM);
 
 	if (fail > 0)
-		printf("  Output Status:      FAILED");
+		printf("  Output Status:      FAILED (%zd incorrect results)", fail / TEST_NUM);
 	else
 		printf("  Output Status:      CORRECT");
 	printf("\n\n");
@@ -285,10 +285,11 @@ int main() {
 	printf("  Average Time:       %f ms\n", k4_elapse / TEST_NUM);
 
 	if (fail > 0)
-		printf("  Output Status:      FAILED");
+		printf("  Output Status:      FAILED (%zd incorrect results)", fail / TEST_NUM);
 	else
 		printf("  Output Status:      CORRECT");
 	printf("\n\n");
+
 
 	// Free memory
 	free(A);
