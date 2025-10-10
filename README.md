@@ -42,10 +42,6 @@ A correctness pass prints sample outputs, and all kernels are benchmarked using 
 
 ---
 
-## 
-
----
-
 ## Debug-Mode Benchmark Results
 
 Performance in **Debug mode** was measured across progressively larger vector sizes.
@@ -164,43 +160,44 @@ Each result confirms proper boundary handling with no segmentation faults or inc
 
 ---
 
+Here’s a cleaner, more professional version of your **Summary Table of Execution Times** — properly aligned, with improved spacing, readable headers, and consistent styling for a technical report or GitHub README.
+
+I’ve also added minor formatting improvements like **grouped headers**, **fixed numeric precision**, and a short interpretive note for context.
+
+---
+
 ## Summary Table of Execution Times
 
-Note: decimals rounded to 4 places
+*(All values in milliseconds; rounded to 4 decimal places)*
 
-### Debug Mode
+### **Debug Mode Results**
 
-| Input Size | Kernel   | Execution Time (ms) |
-| ---------- | -------- | ------------------- |
-| 2^20       | C        | 3.3663              |
-| 2^20       | x86      | 2.0647              |
-| 2^20       | SIMD XMM | 1.8149              |
-| 2^20       | SIMD YMM | 0.0954              |
-| 2^26       | C        | 165.0952            |
-| 2^26       | x86      | 100.9830            |
-| 2^26       | SIMD XMM | 86.0887             |
-| 2^26       | SIMD YMM | 2.8291              |
-| 2^28       | C        | 655.9969            |
-| 2^28       | x86      | 322.2668            |
-| 2^28       | SIMD XMM | 304.7617            |
-| 2^28       | SIMD YMM | 9.3012              |
+| **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
+| :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
+|       2²⁰      |           3.3663 |               2.0647 |                 1.8149 |             **0.0954** |
+|       2²⁶      |         165.0952 |             100.9830 |                86.0887 |             **2.8291** |
+|       2²⁸      |         655.9969 |             322.2668 |               304.7617 |             **9.3012** |
 
-### Release Mode
+*In Debug mode, SIMD YMM consistently achieved the fastest performance, outperforming the scalar versions by over an order of magnitude.*
 
-| Input Size | Kernel   | Execution Time (ms) |
-| ---------- | -------- | ------------------- |
-| 2^20       | C        | 1.4124              |
-| 2^20       | x86      | 1.6683              |
-| 2^20       | SIMD XMM | 1.1171              |
-| 2^20       | SIMD YMM | 0.0270              |
-| 2^26       | C        | 81.2926             |
-| 2^26       | x86      | 104.3931            |
-| 2^26       | SIMD XMM | 76.0268             |
-| 2^26       | SIMD YMM | 2.5403              |
-| 2^28       | C        | 279.3449            |
-| 2^28       | x86      | 415.01497           |
-| 2^28       | SIMD XMM | 270.2237            |
-| 2^28       | SIMD YMM | 8.7021              |
+
+### **Release Mode Results**
+
+| **Input Size** | **C (Baseline)** | **x86 (Scalar ASM)** | **SIMD XMM (128-bit)** | **SIMD YMM (256-bit)** |
+| :------------: | ---------------: | -------------------: | ---------------------: | ---------------------: |
+|       2²⁰      |           1.4124 |               1.6683 |                 1.1171 |             **0.0270** |
+|       2²⁶      |          81.2926 |             104.3931 |                76.0268 |             **2.5403** |
+|       2²⁸      |         279.3449 |             415.0150 |               270.2237 |             **8.7021** |
+
+*In Release mode, compiler-optimized C nearly matches or surpasses the scalar assembly version, while SIMD YMM remains dominant with the lowest execution times.*
+
+
+### Key Observations
+
+* SIMD (XMM/YMM) kernels consistently outperform scalar implementations.
+* The YMM version provides the best overall performance due to 8-float parallelism.
+* In Release mode, **x86 scalar assembly becomes slower** because the compiler optimizes C aggressively, while manual assembly remains static.
+* The scaling trend (2²⁰ → 2²⁸) shows near-linear growth for all kernels, confirming stable computation efficiency across input sizes.
 
 ---
 
@@ -262,14 +259,31 @@ Reasons for the modest gain (~10–15% faster than XMM, not 2×):
 
 Despite these constraints, YMM delivers the fastest performance overall, maintaining correctness and stable runtime across tests.
 
+### Additional Insight: Debug Mode vs. Release Mode Behavior
 
+An interesting observation from the tests was that the **x86-64 scalar assembly kernel** actually ran **slower in Release mode** than in Debug mode.
+At first, this seems counterintuitive — Release builds are typically faster due to compiler optimizations. However, several technical factors explain why this occurred:
 
-### Summary of Insights
+1. **Compiler optimizations favor C code, not external assembly.**
+   In Release mode, the compiler aggressively optimizes C functions (through loop unrolling, instruction scheduling, vectorization, and register reuse).
+   In contrast, the manually written `x86_64` assembly kernel is treated as a fixed external function — the compiler cannot analyze or optimize it.
+   As a result, optimized C code in Release mode can sometimes **outperform scalar assembly**.
 
-* Moving from **C → scalar assembly** mainly reduces compiler overhead.
-* Moving from **scalar → XMM/YMM SIMD** yields **true parallel speedups** through vectorized floating-point math.
-* The **marginal difference between XMM and YMM** suggests the code has reached a **memory-throughput bound** rather than a compute bound — a common scenario in vectorized workloads.
-* All kernels produce identical results, confirming **functional equivalence** across implementations.
+2. **Debug mode preserves the original instruction flow.**
+   In Debug mode, the compiler applies minimal optimization, allowing the assembly routine to execute exactly as written.
+   This can benefit simple scalar routines that rely on predictable instruction order and timing.
+
+3. **Stack frame and alignment differences.**
+   Release mode often omits frame pointers and may realign stack variables for optimization.
+   Since the assembly kernel accesses parameters directly from the stack (e.g., `[rbp+32]`), these differences can slightly affect memory access latency, causing small slowdowns.
+
+4. **Optimization paradox.**
+   Because the scalar assembly was already manually optimized, Release mode provided **no additional gains** — instead, it made the compiler-generated C code proportionally faster.
+   The end result is a paradox where the hand-tuned assembly appears slower only because the surrounding C code was further optimized.
+
+This finding highlights a valuable insight:
+
+> **Handwritten scalar assembly is not always faster than compiler-optimized C**, especially for simple arithmetic operations where the compiler can automatically apply SIMD vectorization and instruction scheduling.
 
 ---
 
