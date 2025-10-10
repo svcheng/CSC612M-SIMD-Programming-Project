@@ -74,7 +74,7 @@ void vecaddmulc(size_t n, float* A, float* B, float* C, float* D) {
 /// </summary>
 /// <param name="n">size of the vector v</param>
 /// <param name="v">the vector to be printed</param>
-void printVec(int n, float* v) {
+void printVec(size_t n, float* v) {
 	if (n <= 10) {
 		for (int i = 0; i < n; i++) {
 			printf("%f ", v[i]);
@@ -99,7 +99,7 @@ void printVec(int n, float* v) {
 /// </summary>
 /// <param name="n">size of the vector v</param>
 /// <param name="v">the vector to be initialized with 0</param>
-void zeroOut(int n, float* v) {
+void zeroOut(size_t n, float* v) {
 	for (int i = 0; i < n; i++) {
 		v[i] = 0.0f;
 	}
